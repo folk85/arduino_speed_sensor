@@ -1,16 +1,17 @@
 
 #include <QuadDisplay.h>
-#define PN 0x04
+#define PN 0x10
 
 #define NEGLOG  0
 
 int istate;
 int ii,iio;
-int tt1, tt2;
+int tt1, tt2, t_ms, t_mcs;
 unsigned long t1, t2,t0,t_disp;
 unsigned long tau_disp = 500000; // time of period to redraw display
 int pin = 2;
-uint8_t pDisp0;    // point
+uint8_t pDisp0;    ///< QuadDisplay 0
+uint8_t pDisp1;    ///< QuadDisplay 1
 
 /*@brief 
  * Initialize pins and interruptions
@@ -29,12 +30,15 @@ void setup(void)
     DDRB |= 0x31; // output PB0(pin8)-Display, PB4(pin12) and PB5(pin13);
     PORTB &=~0x31;
     DDRD &= ~PN; 
-    PORTD &= ~PN;
+//    PORTD |= PN;
 
     pDisp0 = 8;        // pointer to number of PD4 (pin04) defined as output for Display
+    pDisp1 = 9;        // pointer to number of PD4 (pin04) defined as output for Display
 
     Serial.begin(9600);
     
+    displayDigits(pDisp0, QD_MINUS,QD_d,QD_d,QD_MINUS);
+    displayInt(pDisp1, 10,true,0x0D);
 //    sei();                    // Enable global interrupts
 //    digitalWrite(2, HIGH);    // Enable pullup resistor
 //    EIMSK |= (1 << INT0);     // Enable external interrupt INT0
@@ -67,24 +71,37 @@ void loop(void)
 //      tt2 = (tt2<<1) + (tt2<<2) + tt1 + tt2;
 //      tt2 >>= 3;
 //      if (t0 > 1) {
-        tt2 *= iio;
-        tt2 += tt1;
-        tt2 /= ii;
+      tt2 *= iio;
+      tt2 += tt1;
+      tt2 /= ii;
+
 //        tt2 = (tt2 * iio + tt1) / ii;
-          Serial.print("  CurLong:");
-          Serial.print(t0);
-          Serial.print("  Cur:");
-          Serial.print(tt1);
-          Serial.print("  Ave: ");
-          Serial.println(tt2);
-        if (t2 - t_disp > tau_disp) {
-          displayInt(pDisp0,tt2);
-//          Serial.print("  ii: ");
-//          Serial.print(ii);
-//          Serial.print("  iio: ");
-//          Serial.print(iio);
-          t_disp = t2;
-        }
+//      Serial.print("  CurLong:");
+//      Serial.print(t0);
+//      Serial.print("  Cur:");
+//      Serial.print(tt1);
+//      Serial.print("  Ave: ");
+//      Serial.println(tt2);
+//      if (t2 - t_disp > tau_disp) {
+//        displayInt(pDisp0,tt2);
+////          Serial.print("  ii: ");
+////          Serial.print(ii);
+////          Serial.print("  iio: ");
+////          Serial.print(iio);
+//        t_disp = t2;
+//      }
+
+
+
+// Split time to mili and micro seconds
+      t_ms = (int) (t0 / 1000);
+      t_mcs = (int) (t0 % 1000);
+      Serial.print("  ms: ");
+      Serial.print(t_ms);
+      Serial.print("  mcs: ");
+      Serial.println(t_mcs);
+      displayInt(pDisp0,t_ms);
+      displayInt(pDisp1,t_mcs);
 //      }
       delay(10);
       PORTB &= ~0x20;
